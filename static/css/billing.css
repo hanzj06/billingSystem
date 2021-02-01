@@ -1,0 +1,17 @@
+/**页面元素自定义样式*/
+body{margin: 10px;}
+.demo-carousel{height: 200px; line-height: 200px; text-align: center;}
+#account-add, #account-edit{display: none;padding: 15px;}
+.add-abstract{width: 35%;}
+.add-account{width: 35%;}
+.add-debitamount{width: 15%;}
+.add-creditamount{width: 15%;}
+.input-amount{text-align: right; padding-right: 5px;}
+.input-amount td{text-align: right; padding-right: 5px;}
+#account-add table td{padding:5px;}
+.add-abstract-td{position: relative;}
+.add-abstract-clear,.edit-abstract-clear{position: absolute; top: 30%; right: 20px; display: none; cursor: pointer;}
+.layui-table[lay-even] tr:nth-child(even), .layui-table-click{background-color:#ffffff;}
+.layui-laydate-content td.laydate-selected{background-color:#f6f6f6!important;}
+.table-search-bar{margin-right: 10px;}
+.amount-value{text-align: right; padding-right: 5px;}

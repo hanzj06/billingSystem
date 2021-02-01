@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>账目明细</title>
+    <!--  <link rel="stylesheet" href="https://res.layui.com/layui/dist/css/layui.css?t=1610461958396" media="all">-->
+    <link rel="stylesheet" href="/static/lib/layui/css/layui.css" media="all">
+    <link rel="stylesheet" href="/static/css/billing.css" media="all">
+
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+<div class="subTable" style="width: 100%;">
+    凭证号：
+    <div class="layui-inline table-search-bar">
+        <input class="layui-input" name="search-voucherno-kw" id="search-voucherno-kw" autocomplete="off">
+    </div>
+
+    日期范围:
+    <div class="layui-inline table-search-bar">
+        <input type="text" class="layui-input" id="search-daterange-kw" placeholder=" - ">
+    </div>
+
+    一级科目:
+    <div class="layui-inline table-search-bar  layui-form">
+        <select name="search-subject-kw-1" id="search-subject-kw-1" lay-verify="" lay-search>
+            <option value="">请选择</option>
+        </select>
+    </div>
+    二级科目:
+    <div class="layui-inline table-search-bar  layui-form">
+        <select name="search-subject-kw-1" id="search-subject-kw-2" lay-verify="" lay-search>
+            <option value="">请选择</option>
+        </select>
+    </div>
+    明细段:
+    <div class="layui-inline table-search-bar  layui-form">
+        <select name="search-subject-kw-1" id="search-subject-kw-detail" lay-verify="" lay-search>
+            <option value="">请选择</option>
+        </select>
+    </div>
+    现金段:
+    <div class="layui-inline table-search-bar  layui-form">
+        <select name="search-subject-kw-1" id="search-subject-kw-cash" lay-verify="" lay-search>
+            <option value="">请选择</option>
+        </select>
+    </div>
+    <button class="layui-btn" data-type="reload">搜索</button>
+</div>
+<table class="layui-hide" id="accounts" lay-filter="accounts-table"></table>
+<script type="text/html" id="toolbar">
+    <div class="layui-inline" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+    </div>
+    <div class="layui-inline" lay-event="refresh">
+         <i class="layui-icon layui-icon-refresh-3"></i>
+    </div>
+</script>
+<script type="text/html" id="barAccount">
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<!--新增账目弹出框-->
+<form id="account-add" method="post" enctype="multipart/form-data" class="layui-form">
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">账目日期</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" name="account-add-recordtime" autocomplete="off" id="account-add-recordtime">
+        </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">凭证号</label>
+        <div class="layui-input-block">
+                <input type="text" id="account-add-voucherno" name="account-add-voucherno"
+                       lay-verify="account-add-voucherno"
+                       class="layui-input">
+            </div>
+    </div>
+    <div class="layui-form-item">
+        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+          <legend>账目栏</legend>
+        </fieldset>
+    </div>
+    <table class="layui-table" >
+        <colgroup>
+            <col width="150">
+            <col width="200">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="add-abstract">账目摘要</th>
+                <th class="add-account">账目账户</th>
+                <th class="add-debitamount">借方金额</th>
+                <th class="add-creditamount">贷方金额</th>
+            </tr>
+		</thead>
+		<tbody>
+            <tr>
+                <td class="add-abstract-td">
+					<input type="text" id="account-add-abstract-1" name="account-add-abstract-1"
+                               lay-verify="account-add-abstract" class="layui-input account-add-abstract" autoinpu="true"
+                               onfocus="focusFun(this)" onclick="autoinput(this,'add')" onblur="blurFun(this)">
+                    <spam class="add-abstract-clear" onclick="clearabstractinput(this,'add')">X</spam>
+                </td>
+                <td>
+                    <input type="text" id="account-add-account-1"
+                       name="account-add-account-1"  lay-verify="account-add-account"
+                       class="layui-input account-add-account" >
+                </td>
+                <td>
+                    <input type="text" id="account-add-debitamount-1"
+                       name="account-add-debitamount-1" autocomplete="off" lay-verify="account-add-debitamount"
+                       class="layui-input input-amount account-add-debitamount" onkeyup="limit(this)" onblur="format(this)">
+                </td>
+                <td>
+                    <input type="text" id="account-add-creditamount-1"
+                       name="account-add-creditamount-1" autocomplete="off" lay-verify="account-add-creditamount"
+                       class="layui-input input-amount account-add-creditamount" onblur="format(this)">
+                </td>
+            </tr>
+            <tr>
+                <td class="add-abstract-td">
+                    <input type="text" id="account-add-abstract-2" name="account-add-abstract-2"
+                               lay-verify="account-add-abstract" class="layui-input account-add-abstract" autoinpu="true"
+                           onclick="autoinput(this,'add')" onfocus="focusFun(this)" onblur="blurFun(this)">
+                    <spam class="add-abstract-clear" onclick="clearabstractinput(this,'add')">X</spam>
+                </td>
+                <td>
+                    <input type="text" id="account-add-account-2"
+                       name="account-add-account-2"  lay-verify="account-add-account"
+                       class="layui-input account-add-account" >
+                </td>
+                <td>
+                    <input type="text" id="account-add-debitamount-2"
+                       name="account-add-debitamount-2" autocomplete="off" lay-verify="account-add-debitamount"
+                       class="layui-input input-amount account-add-debitamount" onblur="format(this)">
+                </td>
+                <td>
+                    <input type="text" id="account-add-creditamount-2"
+                       name="account-add-creditamount-2" autocomplete="off" lay-verify="account-add-creditamount"
+                       class="layui-input input-amount account-add-creditamount" onblur="format(this)">
+                </td>
+            </tr>
+			<tr>
+                <td class="add-abstract-td">
+                    <input type="text" id="account-add-abstract-3" name="account-add-abstract-3"
+                               lay-verify="account-add-abstract" class="layui-input account-add-abstract" autoinpu="true"
+                           onclick="autoinput(this,'add')" onfocus="focusFun(this)" onblur="blurFun(this)">
+                    <spam class="add-abstract-clear" onclick="clearabstractinput(this,'add')">X</spam>
+                </td>
+                <td>
+                    <input type="text" id="account-add-account-3"
+                       name="account-add-account-3"  lay-verify="account-add-account"
+                       class="layui-input account-add-account" >
+                </td>
+                <td>
+                    <input type="text" id="account-add-debitamount-3"
+                       name="account-add-debitamount-3" autocomplete="off" lay-verify="account-add-debitamount"
+                       class="layui-input input-amount account-add-debitamount" onblur="format(this)">
+                </td>
+                <td>
+                    <input type="text" id="account-add-creditamount-3"
+                       name="account-add-creditamount-3" autocomplete="off" lay-verify="account-add-creditamount"
+                       class="layui-input input-amount account-add-creditamount" onblur="format(this)">
+                </td>
+            </tr>
+			<tr>
+                <td class="add-abstract-td">
+                    <input type="text" id="account-add-abstract-4" name="account-add-abstract-4"
+                               lay-verify="account-add-abstract" class="layui-input account-add-abstract" autoinpu="true"
+                           onclick="autoinput(this,'add')" onfocus="focusFun(this)" onblur="blurFun(this)">
+                    <spam class="add-abstract-clear" onclick="clearabstractinput(this,'add')">X</spam>
+                </td>
+                <td>
+                    <input type="text" id="account-add-account-4"
+                       name="account-add-account-4"  lay-verify="account-add-account"
+                       class="layui-input account-add-account" >
+                </td>
+                <td>
+                    <input type="text" id="account-add-debitamount-4"
+                       name="account-add-debitamount-4" autocomplete="off" lay-verify="account-add-debitamount"
+                       class="layui-input input-amount account-add-debitamount" onblur="format(this)">
+                </td>
+                <td>
+                    <input type="text" id="account-add-creditamount-4"
+                       name="account-add-creditamount-4" autocomplete="off" lay-verify="account-add-creditamount"
+                       class="layui-input input-amount account-add-creditamount" onblur="format(this)">
+                </td>
+            </tr>
+			<tr>
+                <td class="add-abstract-td">
+                    <input type="text" id="account-add-abstract-5" name="account-add-abstract-5"
+                               lay-verify="account-add-abstract" class="layui-input account-add-abstract" autoinpu="true"
+                           onclick="autoinput(this,'add')" onfocus="focusFun(this)" onblur="blurFun(this)">
+                    <spam class="add-abstract-clear" onclick="clearabstractinput(this,'add')">X</spam>
+                </td>
+                <td>
+                    <input type="text" id="account-add-account-5"
+                       name="account-add-account-5"  lay-verify="account-add-account"
+                       class="layui-input account-add-account" >
+                </td>
+                <td>
+                    <input type="text" id="account-add-debitamount-5"
+                       name="account-add-debitamount-5" autocomplete="off" lay-verify="account-add-debitamount"
+                       class="layui-input input-amount account-add-debitamount" onblur="format(this)">
+                </td>
+                <td>
+                    <input type="text" id="account-add-creditamount-5"
+                       name="account-add-creditamount-5" autocomplete="off" lay-verify="account-add-creditamount"
+                       class="layui-input input-amount account-add-creditamount" onblur="format(this)">
+                </td>
+            </tr>
+            <tr class="layui-table-total input-amount">
+                <td colspan="2" id="account-select-title">
+                     *
+                </td>
+                <td id="totaldebit">
+
+                </td>
+                <td id="totalcredit">
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">记账人</label>
+        <div class="layui-input-block">
+            <input type="text" id="account-add-operatername" name="account-add-operatername"
+                   lay-verify="account-add-operatername"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+      <label class="layui-form-label">附件上传</label>
+      <div class="layui-upload-drag" id="account-add-voucherfile">
+        <i class="layui-icon"></i>
+        <p>点击上传，或将文件拖拽到此处</p>
+        <div class="layui-hide" id="account-add-voucherfile-view">
+          <hr>
+          <img src="" alt="上传成功后渲染" style="max-width: 100%">
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" type="button" lay-submit lay-filter="add-account">立即提交</button>
+      <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+    </div>
+  </div>
+</form>
+
+<!--编辑账目弹出框-->
+<form id="account-edit" method="post" enctype="multipart/form-data" class="layui-form">
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">账目日期</label>
+        <div class="layui-input-block">
+            <input type="text" class="layui-input" name="account-add-recordtime" autocomplete="off" id="account-edit-recordtime">
+        </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">凭证号</label>
+        <div class="layui-input-block">
+                <input type="text" id="account-edit-voucherno" name="account-add-voucherno"
+                       lay-verify="account-add-voucherno"
+                       class="layui-input">
+            </div>
+    </div>
+    <div class="layui-form-item">
+        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 50px;">
+          <legend>账目栏</legend>
+        </fieldset>
+    </div>
+    <table class="layui-table" >
+        <colgroup>
+            <col width="150">
+            <col width="200">
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="add-abstract">账目摘要</th>
+                <th class="add-account">账目账户</th>
+                <th class="add-debitamount">借方金额</th>
+                <th class="add-creditamount">贷方金额</th>
+            </tr>
+		</thead>
+		<tbody>
+
+        </tbody>
+    </table>
+
+    <hr>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">记账人</label>
+        <div class="layui-input-block">
+            <input type="text" id="account-edit-operatername" name="account-add-operatername"
+                   lay-verify="account-add-operatername"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+      <label class="layui-form-label">附件上传</label>
+      <div class="layui-upload-drag" id="account-edit-voucherfile">
+        <i class="layui-icon"></i>
+        <p>点击上传，或将文件拖拽到此处</p>
+        <div class="layui-hide" id="account-edit-voucherfile-view">
+          <hr>
+          <img src="" alt="上传成功后渲染" style="max-width: 100%">
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" type="button" lay-submit lay-filter="edit-account">立即修改</button>
+      <button type="reset" class="layui-btn layui-btn-primary">删  除</button>
+    </div>
+  </div>
+</form>
+<div id="subject-select"  class="layui-form" style="display: none;padding: 25px;" >
+    <form id="subject-select-form"  class="layui-form">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">一级科目</label>
+            <div class="layui-input-block">
+                <select id="account-add-fsubcode" name="account-debit-add-fsubcode" lay-verify="account-add-fsubcode"
+                        class="layui-select" lay-filter="account-add-fsubcode" lay-search>
+                </select>
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">二级科目</label>
+            <div class="layui-input-block">
+                <select id="account-add-ssubcode" name="account-add-ssubcode" lay-verify="account-debit-add-ssubcode"
+                        class="layui-select" lay-search lay-filter="account-select">
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">明细段</label>
+        <div class="layui-input-block">
+            <select id="account-add-detailsub" name="account-add-detailsub" lay-verify="account-add-detailsub"
+                    class="layui-select" lay-search lay-filter="account-select">
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">现金段</label>
+        <div class="layui-input-block">
+            <select id="account-add-cashsub" name="account-add-cashsub" lay-verify="account-add-cashsub" class="layui-select" lay-search>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn select-subject-op" type="button" id="select-subject"  lay-filter="select-subject" >确定</button>
+          <button type="button" class="layui-btn layui-btn-primary select-subject-op" id="cancel-select-subject" >取消</button>
+        </div>
+    </div>
+    </form>
+</div>
+<blockquote class="layui-elem-quote layui-quote-nm layui-hide" id="footer">layui {{ layui.v }} 一个不满意的半成品</blockquote>
+<script src="/static/lib/layui/layui.js"></script>
+<script src="/static/js/billing.js"></script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>账目科目</title>
+<!--  <link rel="stylesheet" href="https://res.layui.com/layui/dist/css/layui.css?t=1610461958396" media="all">-->
+    <link rel="stylesheet" href="/static/lib/layui/css/layui.css" media="all">
+  <style>
+    body{margin: 10px;}
+    .demo-carousel{height: 200px; line-height: 200px; text-align: center;}
+    form{display: none;padding: 15px;}
+  </style>
+</head>
+<body>
+<div class="layui-form-item">
+    <div class="layui-inline layui-col-md7">
+
+        <table class="layui-hide" id="subjects" lay-filter="subjects"></table>
+    </div>
+    <div class="layui-inline layui-col-md4">
+        <div class="subTable">
+          搜索名称：
+          <div class="layui-inline">
+            <input class="layui-input" name="id" id="subReload" autocomplete="off">
+          </div>
+          <button class="layui-btn" data-type="reload">搜索</button>
+        </div>
+        <table class="layui-hide" id="detailsubjects" lay-filter="detailsubjects"></table>
+    </div>
+</div>
+<script type="text/html" id="barAccount">
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<!--新增科目弹出框-->
+<form id="subject-add" enctype="multipart/form-data" class="layui-form" >
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">科目类别</label>
+        <div class="layui-input-block">
+            <input type="radio" lay-filter="subtype" name="subtype" value="firstSubject" title="一级科目">
+            <input type="radio" lay-filter="subtype" name="subtype" value="secondSubject" title="二级科目">
+            <input type="radio" lay-filter="subtype" name="subtype" value="detailSubject" title="明细科目" >
+        </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">科目编号</label>
+        <div class="layui-input-block">
+                <input type="text" id="subject-add-code" name="subject-add-code"
+                       lay-verify="subject-add-code"
+                       class="layui-input">
+            </div>
+    </div>
+    <div class="layui-form-item layui-col-md4">
+        <label class="layui-form-label">科目名称</label>
+        <div class="layui-input-block">
+                <input type="text" id="subject-add-name" name="subject-add-name"
+                       lay-verify="subject-add-name"
+                       class="layui-input">
+            </div>
+    </div>
+    <div class="layui-form-item layui-col-md4" id="subject-add-psubcode-div" style="display: none;">
+        <label class="layui-form-label">上级科目</label>
+        <div class="layui-input-block">
+            <select id="subject-add-psubcode" name="subject-add-psubcode"
+                    lay-verify="subject-add-psubcode" class="layui-select" lay-search disabled>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+          <button class="layui-btn" type="button" lay-submit lay-filter="add-subject" >立即提交</button>
+          <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+    <hr>
+    <div class="layui-form-item layui-col-md4">
+      <label class="layui-form-label">附件上传</label>
+      <div class="layui-upload-drag" id="account-add-voucherfile">
+        <i class="layui-icon"></i>
+        <p>点击上传，或将文件拖拽到此处</p>
+        <div class="layui-hide" id="account-add-voucherfile-view">
+          <hr>
+          <img src="" alt="上传成功后渲染" style="max-width: 100%">
+        </div>
+      </div>
+    </div>
+
+</form>
+
+
+
+<blockquote class="layui-elem-quote layui-quote-nm layui-hide" id="footer">layui {{ layui.v }} 一个不满意的半成品</blockquote>
+
+
+<!--<script src="https://res.layui.com/layui/dist/layui.js?t=1610461958396"></script>-->
+<script src="/static/lib/layui/layui.js"></script>
+<script>
+layui.config({
+  version: '1610461958396' //为了更新 js 缓存，可忽略
+});
+
+layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider'], function(){
+  var laydate = layui.laydate //日期
+  ,laypage = layui.laypage //分页
+  ,layer = layui.layer //弹层
+  ,table = layui.table //表格
+  ,form = layui.form //表格
+  ,carousel = layui.carousel //轮播
+  ,upload = layui.upload //上传
+  ,element = layui.element //元素操作
+  ,slider = layui.slider //滑块
+  ,$ = layui.$
+
+  //展示一二级科目列表
+  var subjectsTable = table.render({
+    elem: '#subjects'
+    //,height: 620
+    ,url: '/account/getSubjects/?subtype=1' //数据接口
+    ,title: '科目表'
+    ,page: true //开启分页
+    ,toolbar: 'default' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+    ,totalRow: true //开启合计行
+    ,cols: [[ //表头
+      {type: 'checkbox', fixed: 'left'}
+      ,{field: 'fathercode', title: '一级科目编码',}
+      ,{field: 'fathername', title: '一级科目名称'}
+      ,{field: 'ssubcode', title: '二级科目编码'}
+      ,{field: 'ssubname', title: '二级科目名称' }
+      ,{fixed: 'right', width: 165, align:'center', toolbar: '#barAccount'}
+    ]]
+    ,done: function (res, curr, count) {
+        merge(res);
+      }
+  });
+
+  //展示明细科目列表
+  var detailsubjectsTable = table.render({
+    elem: '#detailsubjects'
+    //,height: 620
+    ,url: '/account/detailsubjects' //数据接口
+    ,title: '明细科目表'
+    ,page: true //开启分页
+    ,toolbar: 'default' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+    ,totalRow: true //开启合计行
+    ,cols: [[ //表头
+      {type: 'checkbox', fixed: 'left'}
+      ,{field: 'dsubcode', title: '明细科目编码',}
+      ,{field: 'dsubname', title: '明细科目名称'}
+      ,{fixed: 'right', width: 165, align:'center', toolbar: '#barAccount'}
+    ]]
+    ,id:'detaisublreload'
+  });
+  var active = {
+    reload: function(){
+      var subReload = $('#subReload');
+
+      //执行重载
+      table.reload('detaisublreload', {
+        page: {
+          curr: 1 //重新从第 1 页开始
+        }
+        ,where: {
+          key: {
+            // id: demoReload.val()
+            dsubname: subReload.val()
+          }
+        }
+      }, 'data');
+    }
+  };
+  $('.demoTable .layui-btn').on('click', function(){
+    var type = $(this).data('type');
+    active[type] ? active[type].call(this) : '';
+  });
+  $('.subTable .layui-btn').on('click', function(){
+    var type = $(this).data('type');
+    active[type] ? active[type].call(this) : '';
+  });
+
+  function merge(res) {
+        //初始化分割点
+        var indexPoint = [0];
+        var data = res.data;
+        var mergeIndex = 0;//定位需要添加合并属性的行数
+        var mark = 1; //这里涉及到简单的运算，mark是计算每次需要合并的格子数
+        //列名集合["orderNumber","reagentName","chineseVulgo","component","specifications","componentShelf","remarks"];
+        /**
+         * 执行第一列，已序号分组为准，产生分割点并保存
+         */
+        var $ = layui.$
+        var trArr = $(".layui-table-body>.layui-table").find("tr");//所有行
+        for (var i = 1; i < res.data.length; i++) { //这里循环表格当前的数据
+            var tdCurArr = trArr.eq(i).find("td").eq(0);//获取当前行的当前列
+            var tdPreArr = trArr.eq(mergeIndex).find("td").eq(0);//获取相同列的第一列
+            // console.log(k);
+            if (data[i].fathercode === data[i - 1].fathercode) { //后一行的值与前一行的值做比较，相同就需要合并
+                mark += 1;
+                //相同列的第一列增加rowspan属性
+                tdPreArr.each(function () {
+                    $(this).attr("rowspan", mark);
+                });
+                //当前行隐藏
+                tdCurArr.each(function () {
+                    $(this).css("display", "none");
+                });
+            }else {
+                //保存分割点
+                indexPoint.push(i)
+                mergeIndex = i;
+                mark = 1;//一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
+            }
+        }
+        //补全最后一个分割点
+        indexPoint.push(res.data.length)
+        // console.log("合并索引点集合：",indexPoint)
+        //依据拿到的分割点，对其他6列进行合并处理
+        for(var i = 0;i<indexPoint.length;i++){
+            var startIndex=0;
+            if(i!=0){
+                startIndex = indexPoint[i-1];
+            }
+            for(var j=startIndex;j<indexPoint[i];j++){
+                //以第一列产生的区域分割点为基准，执行后面6列合并逻辑
+                mergeSomeRows(1,startIndex,indexPoint[i],trArr,data,'fathercode');
+                mergeSomeRows(2,startIndex,indexPoint[i],trArr,data,'fathername');
+            }
+        }
+  }
+    /**
+     *
+     * @param colIndex:table中列索引
+     * @param startIndex：合并单元格起始索引
+     * @param endIndex：合并单元格结束索引
+     * @param trArr：单列单元格元素集合
+     * @param data：后端返回数据集合
+     * @param colName：当前列字段名
+     */
+  function mergeSomeRows(colIndex,startIndex,endIndex,trArr,data,colName){
+        var mark = 1;
+        var $ = layui.$
+        for(var j=startIndex+1;j<endIndex;j++){
+            ++mark;
+            var tdCurArr = trArr.eq(j).find("td").eq(colIndex);//获取当前行的当前列
+            var tdPreArr = trArr.eq(startIndex).find("td").eq(colIndex);//获取相同列的第一列
+            if (data[j][colName] === data[j - 1][colName]) { //后一行的值与前一行的值做比较，相同就需要合并
+                //相同列的第一列增加rowspan属性
+                tdPreArr.each(function () {
+                    $(this).attr("rowspan", mark);
+                });
+                //当前行隐藏
+                tdCurArr.each(function () {
+                    $(this).css("display", "none");
+                });
+            }else {
+                mark=1;
+                startIndex=j;
+            }
+        }
+
+  }
+
+  //监听头工具栏事件
+  table.on('toolbar()', function(obj){
+    var $ = layui.$
+    var checkStatus = table.checkStatus(obj.config.id)
+    ,data = checkStatus.data; //获取选中的数据
+    switch(obj.event){
+      case 'add':
+          layer.open({
+                type: 1
+                ,title: '新增科目'
+                ,area: ['90%', '500px']
+                ,shade: 0
+                ,maxmin: true
+                ,content: $('#subject-add')
+                ,zIndex: layer.zIndex
+                ,success: function(layero){
+                  layer.setTop(layero);
+                }
+
+            });
+      break;
+      case 'update':
+        if(data.length === 0){
+          layer.msg('请选择一行');
+        } else if(data.length > 1){
+          layer.msg('只能同时编辑一个');
+        } else {
+          layer.alert('编辑 [id]：'+ checkStatus.data[0].id);
+        }
+      break;
+      case 'delete':
+        if(data.length === 0){
+          layer.msg('请选择一行');
+        } else {
+          layer.msg('删除');
+        }
+      break;
+    };
+  });
+
+  //监听明细科目表行工具事件
+  table.on('tool(detailsubjects)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+    var data = obj.data //获得当前行数据
+    ,layEvent = obj.event; //获得 lay-event 对应的值
+    if(layEvent === 'del'){
+      layer.confirm('真的删除行么', function(index){
+        obj.del(); //删除对应行（tr）的DOM结构
+        layer.close(index);
+        //向服务端发送删除指令
+      });
+    } else if(layEvent === 'edit'){
+      layer.msg('编辑操作');
+    }
+  });
+
+
+  // 监听提交
+  form.on('submit(add-subject)', function(data){
+    $.post('/account/addsubject/', data.field, function(data){
+        console.log(data.code)
+        if(data.code == 0){
+           $("#subject-add")[0].reset();
+           layer.closeAll();
+           layer.msg("添加成功！");
+           table.render();
+        }else {
+            alert(2);
+            layer.msg("添加失败！");
+            return false;
+        }
+    });
+  });
+// 监听选择二级目录时，加载出一级目录
+  form.on('radio(subtype)', function(data){
+        var value = data.value;   //  当前选中的value值
+        var $ = layui.$;
+        if(value == 'secondSubject'){
+            $.get('/account/getFirstsubjects',function (data,status) {
+                if(status == 'success'){
+                    var data = data.data;
+                    var op = '<option value="">请选择上级科目</option>'
+                    $.each(data,function(i,v){
+                        op += '<option value="' + data[i].fsubcode + '">' + data[i].fsubname + '</option>';
+
+                    })
+                    $('#subject-add-psubcode').append(op);
+                    form.render('select');
+                }
+            })
+
+            $('#subject-add-psubcode').removeAttr('disabled')
+            $('#subject-add-psubcode-div').show()
+            form.render();
+        }else{
+            $('#subject-add-psubcode').attr('disabled', 'disabled')
+            $('#subject-add-psubcode-div').hide()
+            $('#subject-add-psubcode').html('')
+            form.render();
+        }
+  })
+
+  //将日期直接嵌套在指定容器中
+  var dateIns = laydate.render({
+    elem: '#laydateDemo'
+    ,position: 'static'
+    ,calendar: true //是否开启公历重要节日
+    ,mark: { //标记重要日子
+      '0-10-14': '生日'
+      ,'2020-01-18': '小年'
+      ,'2020-01-24': '除夕'
+      ,'2020-01-25': '春节'
+      ,'2020-02-01': '上班'
+    }
+    ,done: function(value, date, endDate){
+      if(date.year == 2017 && date.month == 11 && date.date == 30){
+        dateIns.hint('一不小心就月底了呢');
+      }
+    }
+    ,change: function(value, date, endDate){
+      layer.msg(value)
+    }
+  });
+
+  //分页
+  laypage.render({
+    elem: 'pageDemo' //分页容器的id
+    ,count: 100 //总页数
+    ,skin: '#1E9FFF' //自定义选中色值
+    //,skip: true //开启跳页
+    ,jump: function(obj, first){
+      if(!first){
+        layer.msg('第'+ obj.curr +'页', {offset: 'b'});
+      }
+    }
+  });
+
+  //上传
+  upload.render({
+    elem: '#account-add-voucherfile'
+    ,url: '/account/upload/' //改成您自己的上传接口
+    ,accept:'file'
+    ,done: function(res){
+        if(res.code == 0) {
+            layer.closeAll();
+            layer.msg('上传成功');
+            table.reload('detaisublreload')
+         //layui.$('#account-add-voucherfile-view').removeClass('layui-hide').find('xls').attr('src', res.files.file);
+         //console.log(res)
+        }else{
+            layer.closeAll();
+            layer.msg(res.msg);
+        }
+    }
+  });
+
+  //底部信息
+
+  layer.ready(function(){
+      var $ = layui.$;
+      var footerTpl = '';
+      $.get('https://api.xygeng.cn/one',function(data, status){
+        footerTpl = (data.data.content) + '————' + data.data.origin
+        lay('#footer').html(layui.laytpl(footerTpl).render({}))
+  .removeClass('layui-hide');
+      })
+  });
+
+});
+</script>
+</body>
+</html>
