@@ -250,9 +250,11 @@ def addAcount(request):
             else:
                 cramountlist = cramountstr.split(',')
                 cramount = float(''.join(cramountlist))
-
-            accdetail = AccountDetail(voucherno=pcode, abstract=abstract, subcodeset=subcodeset,
-                                      debitamount=deamount, creditamount=cramount)
+            # 因为搜索的多组合性，这里还是将subcodeset拆分存储，后续将表中subcodeset字段拿掉
+            subcodesetList = subcodeset.split(".")
+            accdetail = AccountDetail(voucherno=pcode, abstract=abstract, subcodeset=subcodeset, fsubcode=subcodesetList[0]
+                                      , ssubcode=subcodesetList[1], csubcode=subcodesetList[2],
+                                      dsubcode=subcodesetList[3], debitamount=deamount, creditamount=cramount)
             accountDetailList.append(accdetail)
         try:
             acd = models.AccountDetail.objects.bulk_create(accountDetailList)
@@ -340,15 +342,39 @@ def getAccounts(request):
     aBaseInfoQS = models.AccountBaseInfo.objects
     aDetailQS = models.AccountDetail.objects
     requestArgs = request.GET.dict()  # 获取参数字典
+    # page=1&limit=10&voucherno=&daterange=&subject_1=&subject_2=&subject_detail=&subject_cash=
     del requestArgs["page"]
     del requestArgs["limit"]
-    qq = Q()  # 定义一个Q对象用来放入查询条件
-    aBaseInfoList = []
-    if len(requestArgs) > 0:
-        qq = reduce(operator.and_, [Q(**{k: requestArgs[k]}) for k in requestArgs])  # 如果接收到了参数，组装成查询条件对象
-        aBaseInfoList = aBaseInfoQS.filter(qq)  # 执行查询过滤
-    else:
-        aBaseInfoList = aBaseInfoQS.all()  # 如果没有传递参数，则查询出所有数据
+    dq = {}
+    aBaseInfoList = aBaseInfoQS.all()  # 初始化查询结果为所有数据
+    for arg in list(requestArgs.keys()):
+        if requestArgs[arg] == '':
+            del requestArgs[arg]
+        elif arg == "voucherno":
+            aBaseInfoList = aBaseInfoQS.filter(voucherno=requestArgs[arg]) & aBaseInfoList  # 将凭证查询结果与所有结果取交集
+        elif arg == "daterange":
+            pass  # 时间区间搜索等下再写
+        else:
+            dq[arg] = requestArgs[arg]
+    detailItems = aDetailQS.filter(**dq)
+    if len(detailItems) != 0:
+        vnolist = []
+        for i in range(0, len(detailItems)):
+            vnolist.append(detailItems[i].voucherno.voucherno)
+        vnolist = list(set(vnolist))
+    if len(vnolist) != 0:
+        adBaseInfoList = aBaseInfoQS.filter(voucherno=vnolist[0])
+        for i in range(1, len(vnolist)):
+            adBaseInfoList = aBaseInfoQS.filter(voucherno=vnolist[i]) | adBaseInfoList
+    aBaseInfoList = aBaseInfoList & adBaseInfoList
+    # qq = Q()
+    # if len(bq) > 0:
+    #     qq = reduce(operator.or_, [Q(**{bq[k]: k}) for k in bq])  # 如果接收到了参数，组装成查询条件对象
+    #     print("*********************", bq)
+    #     # (AND: ('voucherno', '111111'), ('subject_1', '1001'), ('subject_2', '*'), ('subject_cash', '00'))
+    #     aBaseInfoList = aBaseInfoQS.filter(qq)  # 执行查询过滤
+    # else:
+    #     aBaseInfoList = aBaseInfoQS.all()  # 如果没有传递参数，则查询出所有数据
 
     if len(aBaseInfoList) == 0:
         code = -1

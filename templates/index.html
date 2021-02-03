@@ -11,44 +11,55 @@
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-<div class="subTable" style="width: 100%;">
-    凭证号：
-    <div class="layui-inline table-search-bar">
-        <input class="layui-input" name="search-voucherno-kw" id="search-voucherno-kw" autocomplete="off">
-    </div>
+<!--搜索区域 开始------------------------------------>
+<div class="subTable">
+    <div class="layui-form-item">
+        凭证号：
+        <div class="layui-inline table-search-bar">
+            <input class="layui-input" name="search-voucherno-kw" id="search-voucherno-kw" autocomplete="off">
+        </div>
 
-    日期范围:
-    <div class="layui-inline table-search-bar">
-        <input type="text" class="layui-input" id="search-daterange-kw" placeholder=" - ">
-    </div>
+        日期范围：
+        <div class="layui-inline table-search-bar">
+            <input type="text" class="layui-input" id="search-daterange-kw" placeholder=" - ">
+        </div>
 
-    一级科目:
-    <div class="layui-inline table-search-bar  layui-form">
-        <select name="search-subject-kw-1" id="search-subject-kw-1" lay-verify="" lay-search>
-            <option value="">请选择</option>
-        </select>
+        一级科目：
+        <div class="layui-inline table-search-bar  layui-form">
+            <select name="search-subject-kw-1" id="search-subject-kw-1" lay-filter="search-subject-kw-1" lay-search>
+                <option value="">请选择</option>
+            </select>
+        </div>
+        二级科目：
+        <div class="layui-inline table-search-bar  layui-form">
+            <select name="search-subject-kw-1" id="search-subject-kw-2" lay-filter="search-subject-kw-2" lay-search>
+                <option value="">请选择</option>
+            </select>
+        </div>
     </div>
-    二级科目:
-    <div class="layui-inline table-search-bar  layui-form">
-        <select name="search-subject-kw-1" id="search-subject-kw-2" lay-verify="" lay-search>
-            <option value="">请选择</option>
-        </select>
+    <div class="layui-form-itemx">
+        明细段：
+        <div class="layui-inline table-search-bar  layui-form">
+            <select name="search-subject-kw-1" id="search-subject-kw-detail" lay-verify="" lay-search>
+                <option value="">请选择</option>
+            </select>
+        </div>
+         现金科目：
+        <div class="layui-inline table-search-bar  layui-form">
+            <select name="search-subject-kw-1" id="search-subject-kw-cash" lay-verify="" lay-search>
+                <option value="">请选择</option>
+            </select>
+        </div>
+        <button class="layui-btn" data-type="reload">搜索</button>
     </div>
-    明细段:
-    <div class="layui-inline table-search-bar  layui-form">
-        <select name="search-subject-kw-1" id="search-subject-kw-detail" lay-verify="" lay-search>
-            <option value="">请选择</option>
-        </select>
-    </div>
-    现金段:
-    <div class="layui-inline table-search-bar  layui-form">
-        <select name="search-subject-kw-1" id="search-subject-kw-cash" lay-verify="" lay-search>
-            <option value="">请选择</option>
-        </select>
-    </div>
-    <button class="layui-btn" data-type="reload">搜索</button>
 </div>
+<!--搜索区域 结束------------------------------------>
+
+<!--数据表格 开始------------------------------------>
 <table class="layui-hide" id="accounts" lay-filter="accounts-table"></table>
+<!--数据表格 结束------------------------------------>
+
+<!--以下定义表格左上角toolBar----------------------->
 <script type="text/html" id="toolbar">
     <div class="layui-inline" lay-event="add">
         <i class="layui-icon layui-icon-add-1"></i>
@@ -57,11 +68,13 @@
          <i class="layui-icon layui-icon-refresh-3"></i>
     </div>
 </script>
+<!--以下定义表格最后一列toolBar--------------------->
 <script type="text/html" id="barAccount">
   <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
   <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
 </script>
-<!--新增账目弹出框-->
+
+<!--新增账目弹出框 开始------------------------------>
 <form id="account-add" method="post" enctype="multipart/form-data" class="layui-form">
     <div class="layui-form-item layui-col-md4">
         <label class="layui-form-label">账目日期</label>
@@ -93,7 +106,7 @@
                 <th class="add-abstract">账目摘要</th>
                 <th class="add-account">账目账户</th>
                 <th class="add-debitamount">借方金额</th>
-                <th class="add-creditamount">贷方金额</th>
+                <th class="add-creditamount" id="account-tr-add-td">贷方金额<i class="layui-icon layui-icon-add-1" id="account-tr-add-icon" style="float: right;"></i></th>
             </tr>
 		</thead>
 		<tbody>
@@ -253,8 +266,9 @@
     </div>
   </div>
 </form>
+<!--新增账目弹出框 结束------------------------------>
 
-<!--编辑账目弹出框-->
+<!--编辑账目弹出框 开始------------------------------>
 <form id="account-edit" method="post" enctype="multipart/form-data" class="layui-form">
     <div class="layui-form-item layui-col-md4">
         <label class="layui-form-label">账目日期</label>
@@ -321,6 +335,9 @@
     </div>
   </div>
 </form>
+<!--编辑账目弹出框 结束------------------------------>
+
+<!--选择科目弹窗 开始-------------------------------->
 <div id="subject-select"  class="layui-form" style="display: none;padding: 25px;" >
     <form id="subject-select-form"  class="layui-form">
     <div class="layui-form-item">
@@ -364,7 +381,10 @@
     </div>
     </form>
 </div>
-<blockquote class="layui-elem-quote layui-quote-nm layui-hide" id="footer">layui {{ layui.v }} 一个不满意的半成品</blockquote>
+<!--选择科目弹窗 结束-------------------------------->
+
+<!--以下页脚每日一句-------------------------------->
+<blockquote class="layui-elem-quote layui-quote-nm layui-hide" id="footer"></blockquote>
 <script src="/static/lib/layui/layui.js"></script>
 <script src="/static/js/billing.js"></script>
 </body>

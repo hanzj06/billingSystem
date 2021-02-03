@@ -12,27 +12,21 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
     ,upload = layui.upload //上传
     ,element = layui.element //元素操作
     ,form = layui.form //滑块
-    ,$ = layui.$
-    //向世界问个好
-    // layer.msg('Hello World');
-    //监听Tab切换
-    element.on('tab(demo)', function(data){
-        layer.tips('切换了 '+ data.index +'：'+ this.innerHTML, this, {
-            tips: 1
-        });
-    });
-    //日期时间选择器
+    ,$ = layui.$;
+
+    //渲染新增账目界面 账目日期时间选择器
     laydate.render({
         elem: '#account-add-recordtime'
         ,calendar: true
         ,isInitValue: true
     });
-    //日期时间选择器
+    //渲染编辑账目界面 账目日期时间选择器
     laydate.render({
         elem: '#account-edit-recordtime'
         ,calendar: true
         ,isInitValue: true
     });
+
     //日期范围，账目表上方搜索-账目日期区间用
     laydate.render({
         elem: '#search-daterange-kw'
@@ -72,13 +66,15 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
                     $("td[data-field='creditamount']").find('div').addClass('amount-value');
                     $("td[data-field='debittotal']").find('div').addClass('amount-value');
                     $("td[data-field='credittotal']").find('div').addClass('amount-value');
-                    debittotalsumobj = $("td[data-field='debittotal']")[$("td[data-field='debittotal']").length - 1];
+                    let debittotalsumobj = $("td[data-field='debittotal']")[$("td[data-field='debittotal']").length - 1];
                     $(debittotalsumobj).children('div').html(res.debittotalsum);
-                    credittotalsum = $("td[data-field='credittotal']")[$("td[data-field='credittotal']").length - 1];
+                    let credittotalsum = $("td[data-field='credittotal']")[$("td[data-field='credittotal']").length - 1];
                     $(credittotalsum).children('div').html(res.credittotalsum);
                     merge(res);
                 }
     });
+
+    // *******************数据单元格合并功能实现代码开始*****************************
     function merge(res) {
         //初始化分割点
         var indexPoint = [0];
@@ -89,7 +85,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
         /**
         * 执行第一列，已序号分组为准，产生分割点并保存
         */
-        var $ = layui.$
+        var $ = layui.$;
         var trArr = $(".layui-table-body>.layui-table").find("tr");//所有行
         for (var i = 1; i < res.data.length; i++) { //这里循环表格当前的数据
             var tdCurArr = trArr.eq(i).find("td").eq(0);//获取当前行的当前列
@@ -107,21 +103,21 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
                 });
             }else {
                 //保存分割点
-                indexPoint.push(i)
+                indexPoint.push(i);
                 mergeIndex = i;
                 mark = 1;//一旦前后两行的值不一样了，那么需要合并的格子数mark就需要重新计算
             }
         }
         //补全最后一个分割点
-        indexPoint.push(res.data.length)
+        indexPoint.push(res.data.length);
         // console.log("合并索引点集合：",indexPoint)
         //依据拿到的分割点，对其他6列进行合并处理
-        for(var i = 0;i<indexPoint.length;i++){
-            var startIndex=0;
-            if(i!=0){
+        for(let i = 0;i<indexPoint.length;i++){
+            let startIndex=0;
+            if(i!==0){
                 startIndex = indexPoint[i-1];
             }
-            for(var j=startIndex;j<indexPoint[i];j++){
+            for(let j=startIndex;j<indexPoint[i];j++){
                 //以第一列产生的区域分割点为基准，执行后面6列合并逻辑
                 mergeSomeRows(5,startIndex,indexPoint[i],trArr,data,'voucherno');
                 mergeSomeRows(6,startIndex,indexPoint[i],trArr,data,'debittotal');
@@ -167,9 +163,11 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
             }
         }
     }
+    // *******************数据单元格合并功能实现代码结束*****************************
+
     //监听头工具栏事件
     table.on('toolbar(accounts-table)', function(obj){
-        var $ = layui.$
+        var $ = layui.$;
         var checkStatus = table.checkStatus(obj.config.id)
         ,data = checkStatus.data; //获取选中的数据
         switch(obj.event){
@@ -192,10 +190,9 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
                 });
                 break;
             case 'refresh':
-                table.reload('accountTableId');
-                //window.location.reload(); //  后续优化只重载表格
+                table.reload('accountTableId');  //以当前筛选条件重载表格
                 break;
-        };
+        }
     });
 
     //定义重载
@@ -203,23 +200,24 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
         reload: function(){
             var voucherno = $('#search-voucherno-kw').val();
             var daterange = $('#search-daterange-kw').val();
-            var subject_1 = $('#search-subject-kw-1').val();
-            var subject_2 = $('#search-subject-kw-2').val();
-            var subject_detail = $('#search-subject-kw-detail').val();
-            var subject_cash = $('#search-subject-kw-cash').val();
+            var fsubcode = $('#search-subject-kw-1').val() != '*' ? $('#search-subject-kw-1').val():"";
+            var ssubcode = $('#search-subject-kw-2').val() != '*' ? $('#search-subject-kw-2').val():"";
+            var dsubcode = $('#search-subject-kw-detail').val() != '*' ? $('#search-subject-kw-detail').val():"";
+            var csubcode = $('#search-subject-kw-cash').val() != '*' ? $('#search-subject-kw-cash').val():"";
             //执行重载
             table.reload('accountTableId', {
                 where: {
                         voucherno: voucherno
                         ,daterange:daterange
-                        ,subject_1:subject_1
-                        ,subject_2:subject_2
-                        ,subject_detail:subject_detail
-                        ,subject_cash:subject_cash
+                        ,fsubcode:fsubcode
+                        ,ssubcode:ssubcode
+                        ,csubcode:csubcode
+                        ,dsubcode:dsubcode
                 }
             }, 'data');
         }
     };
+
     //点击搜索重载表格
     $('.subTable .layui-btn').on('click', function(){
         var type = $(this).data('type');
@@ -230,10 +228,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
     $('.account-add-account').mouseover(function(e) {
         $('#account-select-title').text($(e.target).attr('title'));
     });
-    $(document).on('mouseover','.account-edit-account',function(e) {
-        alert()
-        $('#account-select-title-edit').text($(e.target).attr('title'));
-    });
+
     $(document).on('mouseover','.account-add-account',function(e) {
         subcodesetobj = $("td[data-field='subcodeset']")[$("td[data-field='subcodeset']").length - 1];
         $(subcodesetobj).children('div').html(e.target.title);
@@ -317,7 +312,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
                 obj.del(); //删除对应行（tr）的DOM结构
                 layer.close(index);
                 //table.reload('accountTableId');
-        //向服务端发送删除指令
+                //向服务端发送删除指令
             });
         } else if(layEvent === 'edit'){
             layer.msg('编辑操作');
@@ -328,21 +323,18 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
                     $('#account-edit-recordtime').attr('value', data.recordtime)
                     $('#account-edit-voucherno').attr('value', data.voucherno)
                     $('#account-edit-operatername').attr('value', data.biller)
-                    // $('#totaldebit-edit').html(data.debittotal)
-                    // $('#totalcredit-edit').html(data.credittotal)
                     // 预留附件展示
 
                     // 以下给详细账目表单添加数据
                     var insertStr = '';
-                    console.log(data.details[1].abstract);
                     for(i=1;i<data.details.length + 1;i++){
-                        debitamount = data.details[i-1].debitamount;
+                        var debitamount = data.details[i-1].debitamount;
                         if(debitamount !=''){
-                            debitamount = format(parseFloat(debitamount));
+                            var debitamount = format(parseFloat(debitamount));
                         }
-                        creditamount = data.details[i-1].creditamount;
+                        var creditamount = data.details[i-1].creditamount;
                         if(creditamount !=''){
-                            creditamount = format(parseFloat(creditamount));
+                            var creditamount = format(parseFloat(creditamount));
                         }
                         insertStr += '<tr><td class="edit-abstract-td">' +
                             '<input type="text" id="account-edit-abstract-'+ i +'" name="account-edit-abstract-'+ i +'" ' +
@@ -379,7 +371,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
             });
         }
     });
-    // 选择账户，点击输入框弹出选择账户界面
+    // 编辑界面，选择账户，点击输入框弹出选择账户界面
     $(document).on('click','.account-edit-account',function (e) {
         var targetid = e.target.id;
         var targetvalue = e.target.value;
@@ -433,7 +425,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
     // 动态渲染账户各下拉选择框
     layer.ready(function () {
         $.get('/account/getSubjects/?subtype=1',function (data,status) {
-            if(status == 'success'){
+            if(status === 'success'){
                 var data = data.data;
                 var op = '<option value="*"></option>';
                 $.each(data,function(i,v){
@@ -445,7 +437,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
             }
         });
         $.get('/account/getSubjects/?subtype=4',function (data,status) {
-            if(status == 'success'){
+            if(status === 'success'){
                 var data = data.data;
                 var op = '<option value="*"></option>';
                 $.each(data,function(i,v){
@@ -457,7 +449,7 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
             }
         });
         $.get('/account/getSubjects/?subtype=5',function (data,status) {
-            if(status == 'success'){
+            if(status === 'success'){
                 var data = data.data;
                 var op = '<option value="*"></option>';
                 $.each(data,function(i,v){
@@ -471,15 +463,31 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
     });
     // 二级科目跟随一级科目选择进行相应更换
     form.on('select(account-add-fsubcode)',function (data) {
-        $('#account-add-ssubcode').html('')
+        $('#account-add-ssubcode').html('');
         $.get('/account/getChildSubjects/?subtype=2&parent=' + data.value,function (data,status) {
-            if(status == 'success'){
+            if(status === 'success'){
                 var data = data.data;
-                var op = '<option value="*"></option>'
+                var op = '<option value="*"></option>';
                 $.each(data,function(i,v){
                     op += '<option value="' + data[i].subcode + '">' + data[i].subdescription + '</option>';
                 });
                 $('#account-add-ssubcode').append(op);
+                form.render('select');
+            }
+        });
+    });
+
+    // 搜索区域  二级科目跟随一级科目选择进行相应更换
+    form.on('select(search-subject-kw-1)',function (data) {
+        $('#search-subject-kw-2').html('');
+        $.get('/account/getChildSubjects/?subtype=2&parent=' + data.value,function (data,status) {
+            if(status == 'success'){
+                var data = data.data;
+                var op = '<option value="*"></option>';
+                $.each(data,function(i,v){
+                    op += '<option value="' + data[i].subcode + '">' + data[i].subdescription + '</option>';
+                });
+                $('#search-subject-kw-2').append(op);
                 form.render('select');
             }
         });
@@ -567,6 +575,16 @@ layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'elemen
             lay('#footer').html(layui.laytpl(footerTpl).render({})).removeClass('layui-hide');
         });
     });
+
+    $("#account-tr-add-td").mouseover(function (){
+        $("#account-tr-add-icon").show();
+    }).mouseout(function (){
+        $("#account-tr-add-icon").hide();
+    });
+
+     $("#account-tr-add-td").bind("click",function (e) {
+        console.log(e);
+     })
 });
 function format(arg) {
     var formatV;

@@ -202,6 +202,10 @@ class AccountDetail(models.Model):
                                   related_name='VNO', on_delete=DO_NOTHING)
     abstract = models.CharField(max_length=128, verbose_name='摘要')
     subcodeset = models.CharField(max_length=128, verbose_name='科目编码')
+    fsubcode = models.CharField(max_length=32, verbose_name='一级科目', blank=True, null=True)
+    ssubcode = models.CharField(max_length=32, verbose_name='二级科目', blank=True, null=True)
+    csubcode = models.CharField(max_length=32, verbose_name='现金段', blank=True, null=True)
+    dsubcode = models.CharField(max_length=32, verbose_name='明细段', blank=True, null=True)
     debitamount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='借方金额', blank=True, null=True)
     creditamount = models.DecimalField(max_digits=15, decimal_places=2, verbose_name='贷方金额', blank=True, null=True)
     class Meta:

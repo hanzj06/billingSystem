@@ -15,3 +15,5 @@ body{margin: 10px;}
 .layui-laydate-content td.laydate-selected{background-color:#f6f6f6!important;}
 .table-search-bar{margin-right: 10px;}
 .amount-value{text-align: right; padding-right: 5px;}
+.subTable input{width: 200px;}
+#account-tr-add-icon{float: right; display: none; cursor: pointer;}
